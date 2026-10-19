@@ -1,0 +1,31 @@
+{
+  "selected_model": "logistic_regression",
+  "selection_metric": "mean 5-fold CV ROC-AUC",
+  "metrics": {
+    "cv_accuracy": 0.846938775510204,
+    "cv_precision": 0.8483776609863567,
+    "cv_recall": 0.8189723320158103,
+    "cv_roc_auc": 0.9065228652185174,
+    "test_accuracy": 0.8688524590163934,
+    "test_precision": 0.8125,
+    "test_recall": 0.9285714285714286,
+    "test_roc_auc": 0.9577922077922079
+  },
+  "trained_at_utc": "2026-10-19T18:30:54.594395+00:00",
+  "features": [
+    "age",
+    "sex",
+    "cp",
+    "trestbps",
+    "chol",
+    "fbs",
+    "restecg",
+    "thalach",
+    "exang",
+    "oldpeak",
+    "slope",
+    "ca",
+    "thal"
+  ],
+  "threshold": 0.5
+}
