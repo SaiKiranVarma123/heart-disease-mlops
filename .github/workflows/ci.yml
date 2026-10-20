@@ -1,0 +1,91 @@
+name: MLOps CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-train:
+    name: Test, Train and Validate
+    runs-on: ubuntu-latest
+
+    env:
+      PYTHONPATH: src
+      MPLBACKEND: Agg
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Upgrade packaging tools
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements-dev.txt
+
+      - name: Verify project structure
+        run: |
+          test -f src/heart_disease/__init__.py
+          test -f src/heart_disease/config.py
+          test -f src/heart_disease/eda.py
+          test -f src/heart_disease/train.py
+          test -f src/heart_disease/api.py
+          test -f data/raw/processed.cleveland.data
+          echo "Project structure validation passed"
+
+      - name: Run Ruff checks
+        run: |
+          ruff check src tests scripts_download_data.py --ignore E401,E501,E701,E702
+
+      - name: Run unit tests
+        run: |
+          pytest --cov=heart_disease --cov-report=term-missing --cov-report=xml
+
+      - name: Run EDA
+        run: |
+          python -m heart_disease.eda
+
+      - name: Train and evaluate models
+        run: |
+          python -m heart_disease.train --no-mlflow
+
+      - name: Verify generated artifacts
+        run: |
+          test -f models/heart_disease_pipeline.joblib
+          test -f models/metadata.json
+          test -f reports/figures/feature_histograms.png
+          test -f reports/figures/correlation_heatmap.png
+          test -f reports/figures/class_balance.png
+          test -f reports/figures/confusion_matrix.png
+          echo "All required artifacts were generated"
+
+      - name: Display model metadata
+        run: |
+          cat models/metadata.json
+
+      - name: Upload model and report artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: heart-disease-model-and-reports
+          path: |
+            models/
+            reports/figures/
+            coverage.xml
+          if-no-files-found: error
+          retention-days: 30
